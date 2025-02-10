@@ -1,11 +1,5 @@
 import './App.css';
-import React from 'react';
-
-const initialState = {session: "Session",
-  breakTime: 5,
-  sessionTime: 25,
-  isPlaying: false,
-}
+import { useState } from 'react';
 
 var myInterval
 
@@ -28,7 +22,7 @@ function startTimer(display, audio, sessionDiv, sessionTime, breakTime) {
         sessionDiv.textContent = (sessionDiv.textContent === "Session") ? "Break":"Session";
         startTimer(display,audio,sessionDiv,sessionTime,breakTime);
       }
-  }, 550);
+  }, 200);
   
 }
 
@@ -36,104 +30,86 @@ function pauseTimer() {
   clearTimeout(myInterval);
 }
 
-class TwentyFiveFive extends React.Component{
-  constructor(props){
-    super(props);
-    this.state = initialState;
-    this.handleClick = this.handleClick.bind(this);
-  }
-
-  handleClick(e){
-
-    const instruction = e.target.id;
-    let sessionTime = this.state.sessionTime;
-    let breakTime = this.state.breakTime;
-
-    switch(instruction){
-      case 'reset':
-        if(this.state.isPlaying){
-          pauseTimer();
-        }
-        this.setState(()=>initialState);
-        document.getElementById("time-left").textContent = this.state.sessionTime+":00";
-        document.getElementById("timer-label").textContent = "Session";
-        document.getElementById("beep").pause();
-        document.getElementById("beep").currentTime = 0;
-        return;
-      case 'start_stop':
-        if(this.state.isPlaying){
-          pauseTimer();
-        }else{
-          startTimer(document.getElementById("time-left"),document.getElementById("beep"),document.getElementById("timer-label"), sessionTime, breakTime);
-        }
-        this.setState((prevState)=>{return{session: "Session",
-          breakTime: breakTime,
-          sessionTime: sessionTime,
-          isPlaying: !prevState.isPlaying,}})
-        break;
-      case 'break-increment':
-        if(breakTime < 60){
-          breakTime++;
-        }
-        break;
-      case 'break-decrement':
-        if(breakTime > 1){
-          breakTime--
-        }
-        break;
-      case 'session-increment':
-        if(sessionTime < 60){
-          sessionTime++;
-        }
-        break;
-      case 'session-decrement':
-        if(sessionTime > 1){
-          sessionTime--
-        }
-        break;
-      default:
-        return;
-    }
-    
-    if(!this.state.isPlaying){
-      this.setState((prevState)=>{return{session: "Session",
-        breakTime: breakTime,
-        sessionTime: sessionTime,
-        isPlaying: prevState.isPlaying,}})
-    }
-  }
-
-  render(){
-    return <div>
-      <div>
-        <h2 id="break-label">Break Length</h2>
-      
-        <button id = "break-increment" onClick={this.handleClick}>+</button>
-        <div id = "break-length">{this.state.breakTime}</div>
-        <button id = "break-decrement" onClick={this.handleClick}>-</button>
-      
-        <h2 id="session-label">Session Length</h2>
-
-        <button id = "session-increment" onClick={this.handleClick}>+</button>
-        <div id = "session-length">{this.state.sessionTime}</div>
-        <button id = "session-decrement" onClick={this.handleClick}>-</button>
-      </div>
-
-      <div>
-        <h1 id = "timer-label">{this.state.session}</h1>
-        <div id = "time-left">{this.state.sessionTime >= 10? this.state.sessionTime+":00":"0"+this.state.sessionTime+":00"}</div>
-        <button id="start_stop" onClick={this.handleClick}>Start/Stop</button>
-        <button id="reset" onClick={this.handleClick}>Reset</button>
-      </div>
-      <audio id = "beep"  className = "clip" src = "https://cdn.freecodecamp.org/testable-projects-fcc/audio/Heater-1.mp3"></audio>
-    </div>
-  }
-}
-
 function App() {
+
+  const [session, setSession] = useState("Session")
+  const [breakTime, setBreakTime] = useState(5)
+  const [sessionTime, setSessionTime] = useState(25)
+  const [isPlaying, setIsPlaying] = useState(false)
+
+  function incBreakHandleClick(){
+    if(!isPlaying){
+      breakTime < 60 ? setBreakTime(breakTime+1):setBreakTime(60);
+    }
+  }
+
+  function decBreakHandleClick(){
+    if(!isPlaying){
+      breakTime > 1 ? setBreakTime(breakTime-1): setBreakTime(1);
+    }
+  }
+
+  function incSessHandleClick(){
+    if(!isPlaying){
+      sessionTime < 60 ? setSessionTime(sessionTime+1):setSessionTime(60); 
+    }
+  }
+
+  function decSessHandleClick(){
+    if(!isPlaying){
+      sessionTime > 1 ? setSessionTime(sessionTime-1):setSessionTime(1);
+    }
+  }
+
+  function startStopHandleClick(){
+
+    if(isPlaying){
+      pauseTimer();
+    }else{
+      startTimer(document.getElementById("time-left"),document.getElementById("beep"),document.getElementById("timer-label"), sessionTime, breakTime);
+    }
+    setIsPlaying(!isPlaying);
+  }
+
+  function resetHandleClick(){
+    if(isPlaying){
+      pauseTimer()
+    }
+    setSession("Session")
+    setBreakTime(5)
+    setSessionTime(25)
+    setIsPlaying(false)
+    document.getElementById("beep").pause();
+    document.getElementById("beep").currentTime = 0;
+    document.getElementById("time-left").textContent = sessionTime+":00";
+    document.getElementById("timer-label").textContent = "Session";
+  }
+
   return (
     <div className="App">
-      <TwentyFiveFive />
+      <div>
+        <div>
+          <h2 id="break-label">Break Length</h2>
+        
+          <button id = "break-increment" onClick={incBreakHandleClick}>+</button>
+          <div id = "break-length">{breakTime}</div>
+          <button id = "break-decrement" onClick={decBreakHandleClick}>-</button>
+        
+          <h2 id="session-label">Session Length</h2>
+
+          <button id = "session-increment" onClick={incSessHandleClick}>+</button>
+          <div id = "session-length">{sessionTime}</div>
+          <button id = "session-decrement" onClick={decSessHandleClick}>-</button>
+        </div>
+
+        <div>
+          <h1 id = "timer-label">{session}</h1>
+          <div id = "time-left">{sessionTime >= 10? sessionTime+":00":"0"+sessionTime+":00"}</div>
+          <button id="start_stop" onClick={startStopHandleClick}>Start/Stop</button>
+          <button id="reset" onClick={resetHandleClick}>Reset</button>
+        </div>
+        <audio id = "beep"  className = "clip" src = "https://cdn.freecodecamp.org/testable-projects-fcc/audio/Heater-1.mp3"></audio>
+      </div>
     </div>
   );
 }
